@@ -20,8 +20,11 @@
     ["/hello" {:get {:handler handler/hello-handler}}]
     
     ["/todos"
-     {:get {:handler handler/list-todos-handler}   ;; GET chama 'list'
-      :post {:handler handler/create-todo-handler}}]] ;; POST chama 'create'
+     {:get {:handler handler/list-todos-handler}
+      :post {:handler handler/create-todo-handler}}]
+    
+    ["/todos/:id/toggle"
+     {:post {:handler handler/toggle-todo-handler}}]]
    ))
 
 ;; --- 2. Definição da Aplicação (App) ---
@@ -55,3 +58,6 @@
     (db/initialize-database!) ;; Garante que a tabela exista
     ;; --------------------------
     (start-server port)))
+
+["/todos/:id/toggle"
+  {:post {:handler handler/toggle-todo-handler}}]
