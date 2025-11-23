@@ -3,7 +3,10 @@
 .DS_Store
 Thumbs.db
 *.log
-
+# --- Banco de Dados ---
+*.db
+*.sqlite
+*.sqlite3
 # --- Dependências ---
 # Dependências do Node.js (para shadow-cljs)
 /node_modules/

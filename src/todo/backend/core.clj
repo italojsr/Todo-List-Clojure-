@@ -1,14 +1,12 @@
 (ns todo.backend.core
   (:require [ring.adapter.jetty :as jetty]
             [reitit.ring :as ring]
-            ;; --- ADICIONE ESTAS 3 LINHAS ---
             [ring.middleware.json :refer [wrap-json-response wrap-json-body]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.cors :refer [wrap-cors]]
-            ;; ---------------------------------
-            [todo.backend.handler :as handler])
-  ;; 4. IMPORTANTE: Para o 'clj -M:run' funcionar
+            [todo.backend.handler :as handler]
+            [todo.backend.db :as db])
   (:gen-class))
 
 ;; --- 1. Definição das Rotas ---
@@ -29,20 +27,16 @@
 ;; --- 2. Definição da Aplicação (App) ---
 ;; Criamos o 'app' final, que é a função Ring principal.
 (def app
-  (ring/ring-handler
-   app-routes
-   (ring/create-default-handler)
-   {:middleware [;; --- ADICIONE ESTE VETOR ---
-                 ;; Ele deve ser o primeiro da lista
-                 [wrap-cors :access-control-allow-origin [#"http://localhost:8000"]
-                            :access-control-allow-methods [:get :post :put :delete]]
-
-                 ;; O resto dos middlewares...
-                 wrap-json-response
-                 [wrap-json-body {:keywords? true}]
-                 wrap-params
-                 wrap-keyword-params
-                ]}))
+  (-> (ring/ring-handler
+       app-routes
+       (ring/create-default-handler))
+      (wrap-cors :access-control-allow-origin [#".*"]
+                 :access-control-allow-methods [:get :post :put :delete :options]
+                 :access-control-allow-headers ["Content-Type"])
+      wrap-keyword-params
+      wrap-params
+      (wrap-json-body {:keywords? true})
+      wrap-json-response))
 
 ;; --- 3. Função para Iniciar o Servidor ---
 ;; Uma função auxiliar que inicia o Jetty.
@@ -53,9 +47,11 @@
   (jetty/run-jetty #'app {:port port :join? false}))
 
 ;; --- 4. Ponto de Entrada Principal (-main) ---
-;; Esta é a função que o alias :run (do deps.edn) procura.
+
+;; CÓDIGO CORRIGIDO
 (defn -main [& args]
-  ;; Permite que a porta seja passada como argumento (ex: clj -M:run 8080)
-  ;; ou usa "3000" como padrão.
   (let [port (Integer/parseInt (or (first args) "3000"))]
+    ;; --- ADICIONE ESTA LINHA ---
+    (db/initialize-database!) ;; Garante que a tabela exista
+    ;; --------------------------
     (start-server port)))
